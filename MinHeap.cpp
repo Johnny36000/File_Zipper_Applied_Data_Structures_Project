@@ -1,161 +1,104 @@
 #include "MinHeap.h"
 
-/**
- * Constructor - Initialize MinHeap with given capacity
- */
-MinHeap::MinHeap(int cap) {
-    capacity = cap;
-    size = 0;
-    heapArray = new HuffmanNode*[capacity];
+static const int initialCapacity = 16; // choosing a small starting capacity to keep it light
+
+// Constructor
+MinHeap::MinHeap() {
+    size_ = 0;
+    capacity_ = initialCapacity;
+    data_ = new HuffmanNode*[capacity_];
 }
 
-/**
- * Destructor - Clean up heap array (nodes are deleted elsewhere)
- */
+// Destructor
 MinHeap::~MinHeap() {
-    delete[] heapArray;
+    // Do not delete HuffmanNode*s (ownershp is external)
+    // Huffman tree destructor will free them later
+    delete[] data_; // only internal array is freed
 }
 
-/**
- * Get parent index
- */
-int MinHeap::parent(int i) {
-    return (i - 1) / 2;
-}
+void MinHeap::ensureCapacity() {
+    if (size_ < capacity_) return; // capacity not reached, can exit safely
 
-/**
- * Get left child index
- */
-int MinHeap::leftChild(int i) {
-    return 2 * i + 1;
-}
+    int newCap = (capacity_ == 0) ? initialCapacity : capacity_ * 2; // double array size
+    HuffmanNode** newData = new HuffmanNode*[newCap];
 
-/**
- * Get right child index
- */
-int MinHeap::rightChild(int i) {
-    return 2 * i + 2;
-}
-
-/**
- * Heapify down - Restore heap property downward from given index
- */
-void MinHeap::heapifyDown(int index) {
-    int smallest = index;
-    int left = leftChild(index);
-    int right = rightChild(index);
-    
-    // Find smallest among node and its children
-    if (left < size && heapArray[left]->frequency < heapArray[smallest]->frequency) {
-        smallest = left;
+    for (int i = 0; i < size_; ++i) {
+        newData[i] = data_[i];
     }
-    
-    if (right < size && heapArray[right]->frequency < heapArray[smallest]->frequency) {
-        smallest = right;
-    }
-    
-    // If smallest is not the current node, swap and continue heapifying
-    if (smallest != index) {
-        HuffmanNode* temp = heapArray[index];
-        heapArray[index] = heapArray[smallest];
-        heapArray[smallest] = temp;
-        
-        heapifyDown(smallest);
-    }
+
+    delete[] data_;
+    data_ = newData;
+    capacity_ = newCap;
 }
 
-/**
- * Heapify up - Restore heap property upward from given index
- */
-void MinHeap::heapifyUp(int index) {
-    while (index > 0 && heapArray[parent(index)]->frequency > heapArray[index]->frequency) {
-        // Swap with parent
-        HuffmanNode* temp = heapArray[index];
-        heapArray[index] = heapArray[parent(index)];
-        heapArray[parent(index)] = temp;
-        
-        index = parent(index);
-    }
-}
-
-/**
- * Resize heap array when capacity is reached
- */
-void MinHeap::resize() {
-    capacity *= 2;
-    HuffmanNode** newArray = new HuffmanNode*[capacity];
-    
-    for (int i = 0; i < size; i++) {
-        newArray[i] = heapArray[i];
-    }
-    
-    delete[] heapArray;
-    heapArray = newArray;
-}
-
-/**
- * Insert a node into the heap
- */
 void MinHeap::insert(HuffmanNode* node) {
-    if (size == capacity) {
-        resize();
-    }
-    
-    // Insert at end and heapify up
-    heapArray[size] = node;
-    heapifyUp(size);
-    size++;
+
+    if (!node) return;                // ignore nulls
+    ensureCapacity();
+
+    // insertion process:
+    data_[size_] = node; // place at the end
+    siftUp(size_);       // sift up if needed
+    ++size_;             // increment size
 }
 
-/**
- * Extract and return the minimum element (root)
- */
 HuffmanNode* MinHeap::extractMin() {
-    if (isEmpty()) {
-        return nullptr;
-    }
-    
-    HuffmanNode* minNode = heapArray[0];
-    
-    // Replace root with last element
-    heapArray[0] = heapArray[size - 1];
-    size--;
-    
-    // Restore heap property
-    if (size > 0) {
-        heapifyDown(0);
-    }
-    
-    return minNode;
+    if (size_ == 0) return 0;         // nullptr if empty
+
+    HuffmanNode* minNode = data_[0];  // root is the smallest
+    data_[0] = data_[size_ - 1];      // move last element to the root
+    --size_;                          // decrement size
+
+    if (size_ > 0) siftDown(0);       // restore heap property
+    return minNode;                   // caller owns this pointer
 }
 
-/**
- * Peek at minimum element without removing it
- */
-HuffmanNode* MinHeap::peek() {
-    if (isEmpty()) {
-        return nullptr;
-    }
-    return heapArray[0];
+HuffmanNode* MinHeap::top() const {
+    if (size_ == 0) return 0;
+    return data_[0];
 }
 
-/**
- * Get current size of heap
- */
-int MinHeap::getSize() {
-    return size;
-}
-
-/**
- * Check if heap is empty
- */
-bool MinHeap::isEmpty() {
-    return size == 0;
-}
-
-/**
- * Clear all elements from heap
- */
 void MinHeap::clear() {
-    size = 0;
+    // nodes are not deleted, ownership is external (Huffman tree will clean up)
+    // simply set size = 0
+    size_ = 0;
+}
+
+void MinHeap::siftUp(int i) {
+    // while node is smaller than parent, swap upward
+    while (i > 0) {
+        int p = parent(i);
+        if (less(data_[i], data_[p])) {
+            // swap pointers
+            HuffmanNode* tmp = data_[i];
+            data_[i] = data_[p];
+            data_[p] = tmp;
+
+            i = p; // continue from parent's index
+
+        } else {
+            break; // heap property satisfied
+        }
+    }
+}
+
+void MinHeap::siftDown(int i) {
+    // swap down with smaller child until heap property holds
+    while (true) {
+        int l = left(i);
+        int r = right(i);
+        int smallest = i;
+
+        if (l < size_ && less(data_[l], data_[smallest])) smallest = l;
+        if (r < size_ && less(data_[r], data_[smallest])) smallest = r;
+
+        if (smallest == i) break;
+
+        // swap with smallest child
+        HuffmanNode* tmp = data_[i];
+        data_[i] = data_[smallest];
+        data_[smallest] = tmp;
+
+        i = smallest; // continue from child swapped with
+    }
 }
