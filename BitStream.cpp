@@ -1,101 +1,114 @@
 #include "BitStream.h"
 
-/**
+/*
  * Constructor
+ * Initializes the bit stream with the given file and mode (read/write).
  */
-BitStream::BitStream(std::fstream* f, bool isWrite) {
-    file = f;
-    writeMode = isWrite;
-    buffer = 0;
+BitStream::BitStream(std::fstream* fileStream, bool mode) {
+    file = fileStream;
+    writingMode = mode;
+    byteHolder = 0;
     bitPosition = 0;
 }
 
-/**
- * Destructor - flush remaining bits if in write mode
+/*
+ * Destructor
+ * If in write mode and bits remain, write them before closing.
  */
 BitStream::~BitStream() {
-    if (writeMode && bitPosition > 0) {
-        flush();
+    if (writingMode && bitPosition > 0) {
+        pushRemainingBits();
     }
 }
 
-/**
- * Write a single bit
+/*
+ * writeBit:
+ * Writes a single bit (0 or 1) into the byteHolder.
+ * When 8 bits are collected, writes the byte to the file.
  */
-void BitStream::writeBit(bool bit) {
-    if (bit) {
-        buffer |= (1 << (7 - bitPosition));
+void BitStream::writeBit(bool bitValue) {
+    if (bitValue) {
+        byteHolder = byteHolder | (1 << (7 - bitPosition));  // set bit at correct position
     }
-    
+
     bitPosition++;
-    
+
     if (bitPosition == 8) {
-        file->put(buffer);
-        buffer = 0;
+        file->put(byteHolder);
+        byteHolder = 0;
         bitPosition = 0;
     }
 }
 
-/**
- * Write a byte
+/*
+ * writeByte:
+ * Writes 8 bits (a full byte) one by one.
  */
-void BitStream::writeByte(unsigned char byte) {
+void BitStream::writeByte(unsigned char value) {
     for (int i = 7; i >= 0; i--) {
-        writeBit((byte >> i) & 1);
+        bool bitValue = ((value >> i) % 2);
+        writeBit(bitValue);
+
     }
 }
 
-/**
- * Flush remaining bits (pad with zeros)
+/*
+ * pushRemainingBits:
+ * Writes any leftover bits (less than 8) to the file.
  */
-void BitStream::flush() {
+void BitStream::pushRemainingBits() {
     if (bitPosition > 0) {
-        file->put(buffer);
-        buffer = 0;
+        file->put(byteHolder);
+        byteHolder = 0;
         bitPosition = 0;
     }
 }
 
-/**
- * Read a single bit
+/*
+ * readBit:
+ * Reads a single bit from the file.
+ * Loads a new byte when the current one is done.
  */
 bool BitStream::readBit() {
     if (bitPosition == 0) {
-        buffer = file->get();
+        byteHolder = file->get();  // load new byte
     }
-    
-    bool bit = (buffer >> (7 - bitPosition)) & 1;
+
+    bool bit = (byteHolder >> (7 - bitPosition)) & 1;
     bitPosition++;
-    
+
     if (bitPosition == 8) {
         bitPosition = 0;
     }
-    
+
     return bit;
 }
 
-/**
- * Read a byte
+/*
+ * readByte:
+ * Reads 8 bits (1 byte) by calling readBit repeatedly.
  */
 unsigned char BitStream::readByte() {
-    unsigned char byte = 0;
+    unsigned char value = 0;
     for (int i = 0; i < 8; i++) {
-        byte = (byte << 1) | readBit();
+        value = (value << 1) | readBit();
     }
-    return byte;
+    return value;
 }
 
-/**
- * Check if more bits available
+/*
+ * hasMoreBits:
+ * Checks if the file still has bits left to read.
  */
 bool BitStream::hasMoreBits() {
     return !file->eof();
 }
 
-/**
- * Reset bit position
+/*
+ * resetStream:
+ * Resets the buffer and bit position.
  */
-void BitStream::reset() {
+void BitStream::resetStream() {
     bitPosition = 0;
-    buffer = 0;
+    byteHolder = 0;
 }
