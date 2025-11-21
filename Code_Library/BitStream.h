@@ -1,34 +1,37 @@
-#ifndef FILE_ZIPPER_APPLIED_DATA_STRUCTURES_PROJECT_BITSTREAM_H
-#define FILE_ZIPPER_APPLIED_DATA_STRUCTURES_PROJECT_BITSTREAM_H
+
+#ifndef MILESTONE_2_ADS_BITSTREAM_H
+#define MILESTONE_2_ADS_BITSTREAM_H
+
 #include <fstream>
 
-/**
- * BitStream class - Handles reading and writing individual bits
- * Essential for Huffman compression/decompression
- */
+/*
+  BitStream class
+  Handles reading and writing bits to a file instead of full bytes.
+  Used for compression (like Huffman encoding).
+*/
 class BitStream {
 private:
-    unsigned char buffer;
-    int bitPosition;
-    std::fstream* file;
-    bool writeMode;
+    unsigned char byteHolder;    // holds up to 8 bits before writing/reading
+    int bitPosition;             // current bit position inside the byte (0–7)
+    std::fstream* file;          // pointer to file stream
+    bool writingMode;            // true for write mode, false for read mode
 
 public:
-    BitStream(std::fstream* f, bool isWrite);
-    ~BitStream();
+    BitStream(std::fstream* fileStream, bool mode);  // constructor
+    ~BitStream();                                    // destructor
 
-    // Write operations
-    void writeBit(bool bit);
-    void writeByte(unsigned char byte);
-    void flush();
+    // Writing functions
+    void writeBit(bool bitValue);                    // write a single bit
+    void writeByte(unsigned char value);             // write a full byte (8 bits)
+    void pushRemainingBits();                        // write leftover bits if any
 
-    // Read operations
-    bool readBit();
-    unsigned char readByte();
-    bool hasMoreBits();
+    // Reading functions
+    bool readBit();                                  // read a single bit
+    unsigned char readByte();                        // read a full byte (8 bits)
+    bool hasMoreBits();                              // check if bits are left to read
 
     // Utility
-    void reset();
+    void resetStream();                              // reset buffer and bit position
 };
 
-#endif //FILE_ZIPPER_APPLIED_DATA_STRUCTURES_PROJECT_BITSTREAM_H
+#endif //MILESTONE_2_ADS_BITSTREAM_H

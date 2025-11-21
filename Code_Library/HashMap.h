@@ -1,6 +1,8 @@
-#ifndef HASHMAP_H
-#define HASHMAP_H
 
+#ifndef MILESTONE_2_ADS_HASHMAP_H
+#define MILESTONE_2_ADS_HASHMAP_H
+
+#include "DynamicArray.h"
 #include <iostream>
 using namespace std;
 
@@ -40,4 +42,5 @@ public:
     int getSize() const;
 };
 
-#endif
+
+#endif //MILESTONE_2_ADS_HASHMAP_H

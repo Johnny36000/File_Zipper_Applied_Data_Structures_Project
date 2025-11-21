@@ -1,0 +1,7 @@
+Huffman coding is a lossless data compression algorithm.
+It uses variable-length codes for encoding symbols, assigning shorter codes to more frequent symbols.
+
+Data compression reduces the number of bits needed to store or transmit data.
+The quick brown fox jumps over the lazy dog.
+The quick brown fox jumps over the lazy dog.
+The quick brown fox jumps over the lazy dog.

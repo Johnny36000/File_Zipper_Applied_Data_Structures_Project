@@ -1,18 +1,15 @@
-cmake_minimum_required(VERSION 3.20)
-project(File_Zipper_Applied_Data_Structures_Project)
+cmake_minimum_required(VERSION 3.14)
+project(Milestone_2_ADS)
 
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-include_directories(Code_Library)
+# Add Code_library subdirectory first
+add_subdirectory(Code_library)
 
-add_executable(File_Zipper_Applied_Data_Structures_Project
-        Code_Library/HuffmanNode.h
-        Code_Library/HuffmanNode.cpp
-        Code_Library/MinHeap.h
-        Code_Library/MinHeap.cpp
-        Code_Library/DynamicArray.h
-        Code_Library/HashMap.h
-        Code_Library/BitStream.h
-        Code_Library/BitStream.cpp
-        Code_Library/main.cpp
-)
+# Main executable (compression/decompression program)
+add_executable(Milestone_2_ADS main.cpp)
+target_link_libraries(Milestone_2_ADS PRIVATE Code_library)
+
+# Add Google_tests subdirectory
+add_subdirectory(Google_tests)

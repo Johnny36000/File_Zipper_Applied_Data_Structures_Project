@@ -1,42 +1,39 @@
+
 #include "HuffmanNode.h"
 
 /**
- * Default Constructor
- */
-HuffmanNode::HuffmanNode() {
-    data = '\0';
-    frequency = 0;
-    left = nullptr;
-    right = nullptr;
-    isLeaf = false;
-}
-
-/**
- * Constructor for leaf node (contains character)
+ * Constructor for leaf nodes or default initialization
+ * Handles all byte values 0-255
  */
 HuffmanNode::HuffmanNode(unsigned char ch, unsigned int freq) {
     data = ch;
     frequency = freq;
     left = nullptr;
     right = nullptr;
-    isLeaf = true;
 }
 
 /**
- * Constructor for internal node (has children)
+ * Constructor for internal nodes with children
+ * Used when merging two nodes in Huffman tree construction
  */
 HuffmanNode::HuffmanNode(unsigned int freq, HuffmanNode* l, HuffmanNode* r) {
-    data = '\0';
+    data = 0;
     frequency = freq;
     left = l;
     right = r;
-    isLeaf = false;
 }
 
 /**
- * Destructor - Recursively delete children
+ * Check if this is a leaf node (contains actual data)
+ */
+bool HuffmanNode::isLeaf() const {
+    return (left == nullptr && right == nullptr);
+}
+
+/**
+ * Recursively delete all child nodes
  */
 HuffmanNode::~HuffmanNode() {
-    // Note: Be careful with deletion - only delete if you own the nodes
-    // In Huffman tree, we typically delete the entire tree from root
+    delete left;
+    delete right;
 }
